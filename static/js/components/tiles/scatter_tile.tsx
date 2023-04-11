@@ -343,6 +343,7 @@ function draw(
     showLabels: false,
     showRegression: false,
     highlightPoints,
+    scalePoints: false,
   };
   const yLabel = getStatVarName(
     chartData.yStatVar.statVar,

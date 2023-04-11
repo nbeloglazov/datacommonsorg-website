@@ -226,6 +226,7 @@ function plot(
     showLabels: props.display.showLabels,
     showRegression: props.display.showRegression,
     highlightPoints: [],
+    scalePoints: props.display.scalePoints,
   };
   const ScatterPlotProperties: ScatterPlotProperties = {
     width: svgContainerRealWidth,
@@ -304,7 +305,8 @@ function getTooltipElement(
   xLabel: string,
   yLabel: string,
   xPerCapita: boolean,
-  yPerCapita: boolean
+  yPerCapita: boolean,
+  displayPopulation: boolean
 ): JSX.Element {
   let supIndex = 0;
   const xPopDateMessage =
@@ -328,6 +330,12 @@ function getTooltipElement(
       {yPopDateMessage && <sup>{yPopDateMessage}</sup>} ({point.yDate}):{" "}
       <b>{getStringOrNA(point.yVal)}</b>
       <br />
+      {displayPopulation && (
+        <>
+          Population ({point.xDate}): <b>{getStringOrNA(point.population)}</b>
+          <br />
+        </>
+      )}
       <footer>
         {xPopDateMessage && (
           <>
@@ -378,7 +386,8 @@ const getMapTooltipHtml =
       xLabel,
       yLabel,
       xPerCapita,
-      yPerCapita
+      yPerCapita,
+      /* displayPopulation= */ false
     );
     return ReactDOMServer.renderToStaticMarkup(element);
   };

@@ -113,6 +113,7 @@ interface DisplayOptionsWrapper {
   chartType: ScatterChartType;
   showDensity: boolean;
   showRegression: boolean;
+  scalePoints: boolean;
 
   // Setters
   setQuadrants: Setter<boolean>;
@@ -120,6 +121,7 @@ interface DisplayOptionsWrapper {
   setChartType: Setter<ScatterChartType>;
   setDensity: Setter<boolean>;
   setRegression: Setter<boolean>;
+  setScalePoints: Setter<boolean>;
 }
 
 interface IsLoadingWrapper {
@@ -191,6 +193,7 @@ function useContextStore(): ContextType {
   const [areDataLoading, setAreDataLoading] = useState(false);
   const [chartType, setChartType] = useState(ScatterChartType.SCATTER);
   const [showRegression, setRegression] = useState(false);
+  const [scalePoints, setScalePoints] = useState(false);
   return {
     x: {
       value: x,
@@ -237,6 +240,8 @@ function useContextStore(): ContextType {
       setDensity: (showDensity) => setDensity(showDensity),
       showRegression: showRegression,
       setRegression: (showRegression) => setRegression(showRegression),
+      scalePoints: scalePoints,
+      setScalePoints: (scalePoints) => setScalePoints(scalePoints),
     },
     isLoading: {
       arePlacesLoading: arePlacesLoading,

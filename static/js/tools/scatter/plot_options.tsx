@@ -31,6 +31,7 @@ import {
   GA_VALUE_TOOL_CHART_OPTION_FILTER_BY_POPULATION,
   GA_VALUE_TOOL_CHART_OPTION_LOG_SCALE,
   GA_VALUE_TOOL_CHART_OPTION_PER_CAPITA,
+  GA_VALUE_TOOL_CHART_OPTION_SCALE_POINTS,
   GA_VALUE_TOOL_CHART_OPTION_SHOW_DENSITY,
   GA_VALUE_TOOL_CHART_OPTION_SHOW_LABELS,
   GA_VALUE_TOOL_CHART_OPTION_SHOW_QUADRANTS,
@@ -265,6 +266,27 @@ function PlotOptions(): JSX.Element {
                     </Label>
                   </FormGroup>
                 </div>
+                <div className="plot-options-input">
+                  <FormGroup check>
+                    <Label check>
+                      <Input
+                        id="scale"
+                        type="checkbox"
+                        checked={display.scalePoints}
+                        onChange={(e) => {
+                          checkScale(display, e);
+                          if (!display.scalePoints) {
+                            triggerGAEvent(GA_EVENT_TOOL_CHART_OPTION_CLICK, {
+                              [GA_PARAM_TOOL_CHART_OPTION]:
+                                GA_VALUE_TOOL_CHART_OPTION_SCALE_POINTS,
+                            });
+                          }
+                        }}
+                      />
+                      Scale wrt population
+                    </Label>
+                  </FormGroup>
+                </div>
               </div>
             </div>
             <div className="plot-options-row">
@@ -381,6 +403,17 @@ function checkDensity(
   event: React.ChangeEvent<HTMLInputElement>
 ): void {
   display.setDensity(event.target.checked);
+}
+
+/**
+ * Toggles whether dots are drawn scaled relative to their X value
+ * or all same size.
+ */
+function checkScale(
+  display: DisplayOptionsWrapper,
+  event: React.ChangeEvent<HTMLInputElement>
+): void {
+  display.setScalePoints(event.target.checked);
 }
 
 /**

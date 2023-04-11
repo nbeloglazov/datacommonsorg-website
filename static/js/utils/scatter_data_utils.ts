@@ -149,7 +149,14 @@ export function getPlaceScatterData(
   if (_.isEmpty(yChartData)) {
     return null;
   }
-  const point = {
+  const popSeries =
+    populationData.data[DEFAULT_POPULATION_DCID][namedPlace.dcid];
+  // Use xChart date for population as dates for xChart and yChart should be the same (?).
+  const population = getMatchingObservation(
+    popSeries?.series || [],
+    xChartData.statDate
+  );
+  const point: Point = {
     place: namedPlace,
     xVal: xChartData.value,
     yVal: yChartData.value,
@@ -159,6 +166,7 @@ export function getPlaceScatterData(
     yPop: yChartData.denomValue,
     xPopDate: xChartData.denomDate,
     yPopDate: yChartData.denomDate,
+    population: population.value,
   };
   const sources = xChartData.sources.concat(yChartData.sources);
   return { point, sources, xUnit: xChartData.unit, yUnit: yChartData.unit };

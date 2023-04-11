@@ -40,6 +40,7 @@ export interface Point {
   yPop?: number;
   xPopDate?: string;
   yPopDate?: string;
+  population?: number;
 }
 
 const MARGINS = {
@@ -68,6 +69,8 @@ const HIGHLIGHT_QUADRANT_SECTIONS = 4;
 const MIN_HIGHLIGHT_POINTS = 4;
 const MIN_TEXT_LABEL_HEIGHT = 10;
 const MIN_TEXT_LABEL_LENGTH = 95;
+const MIN_DOT_SIZE = 3.5;
+const MAX_DOT_SIZE = 25;
 
 enum ScaleType {
   LOG,
@@ -434,27 +437,11 @@ function addTooltip(
   svgContainerRef: React.MutableRefObject<HTMLDivElement>,
   tooltip: React.MutableRefObject<HTMLDivElement>,
   dots: d3.Selection<SVGCircleElement, Point, SVGGElement, unknown>,
-  xLabel: string,
-  yLabel: string,
-  getTooltipElement: (
-    point: Point,
-    xLabel: string,
-    yLabel: string,
-    xPerCapita: boolean,
-    yPerCapita: boolean
-  ) => JSX.Element,
-  xPerCapita: boolean,
-  yPerCapita: boolean
+  getTooltipElement: (point: Point) => JSX.Element
 ): void {
   const div = d3.select(tooltip.current).style("visibility", "hidden");
   const onTooltipMouseover = (point: Point) => {
-    const element = getTooltipElement(
-      point,
-      xLabel,
-      yLabel,
-      xPerCapita,
-      yPerCapita
-    );
+    const element = getTooltipElement(point);
 
     ReactDOM.render(element, tooltip.current);
     const tooltipHeight = (div.node() as HTMLDivElement).getBoundingClientRect()
@@ -718,6 +705,7 @@ export interface ScatterPlotOptions {
   showLabels: boolean;
   showRegression: boolean;
   highlightPoints: ChartQuadrant[];
+  scalePoints: boolean;
 }
 
 /**
@@ -754,7 +742,8 @@ export function drawScatter(
     xLabel: string,
     yLabel: string,
     xPerCapita: boolean,
-    yPerCapita: boolean
+    yPerCapita: boolean,
+    displayPopulation: boolean
   ) => JSX.Element
 ): void {
   const container = d3.select(svgContainerRef.current);
@@ -774,6 +763,10 @@ export function drawScatter(
   // TODO: Handle log domain 0.
   const xMinMax = d3.extent(Object.values(points), (point) => point.xVal);
   const yMinMax = d3.extent(Object.values(points), (point) => point.yVal);
+  const populationMinMax = d3.extent(
+    Object.values(points),
+    (point) => point.population
+  );
 
   let height = properties.height - MARGINS.top - MARGINS.bottom;
   const minXAxisHeight = 30;
@@ -830,7 +823,13 @@ export function drawScatter(
     .data(Object.values(points))
     .enter()
     .append("circle")
-    .attr("r", 5)
+    .attr("r", (point) => {
+      if (!options.scalePoints) return MIN_DOT_SIZE;
+      const scale =
+        (point.population - populationMinMax[0]) /
+        (populationMinMax[1] - populationMinMax[0]);
+      return MIN_DOT_SIZE + (MAX_DOT_SIZE - MIN_DOT_SIZE) * scale;
+    })
     .attr("cx", (point) => xScale(point.xVal))
     .attr("cy", (point) => yScale(point.yVal))
     .attr("stroke", "rgb(147, 0, 0)")
@@ -876,14 +875,14 @@ export function drawScatter(
     );
   }
 
-  addTooltip(
-    svgContainerRef,
-    tooltipRef,
-    dots,
-    properties.xLabel,
-    properties.yLabel,
-    getTooltipElement,
-    options.xPerCapita,
-    options.yPerCapita
+  addTooltip(svgContainerRef, tooltipRef, dots, (p: Point) =>
+    getTooltipElement(
+      p,
+      properties.xLabel,
+      properties.yLabel,
+      options.xPerCapita,
+      options.yPerCapita,
+      options.scalePoints
+    )
   );
 }
