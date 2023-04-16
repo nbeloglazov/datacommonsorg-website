@@ -330,9 +330,9 @@ function getTooltipElement(
       {yPopDateMessage && <sup>{yPopDateMessage}</sup>} ({point.yDate}):{" "}
       <b>{getStringOrNA(point.yVal)}</b>
       <br />
-      {displayPopulation && (
+      {displayPopulation && point.population && (
         <>
-          Population ({point.xDate}): <b>{getStringOrNA(point.population)}</b>
+          Population ({point.population?.date}): <b>{getStringOrNA(point.population?.value)}</b>
           <br />
         </>
       )}

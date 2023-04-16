@@ -26,6 +26,7 @@ import { ChartQuadrant } from "../constants/scatter_chart_constants";
 import { formatNumber } from "../i18n/i18n";
 import { NamedPlace } from "../shared/types";
 import { wrap } from "./base";
+import { Observation } from "../shared/stat_types";
 
 /**
  * Represents a point in the scatter plot.
@@ -40,7 +41,7 @@ export interface Point {
   yPop?: number;
   xPopDate?: string;
   yPopDate?: string;
-  population?: number;
+  population?: Observation;
 }
 
 const MARGINS = {
@@ -51,7 +52,7 @@ const MARGINS = {
 };
 const Y_AXIS_WIDTH = 30;
 const STROKE_WIDTH = 1.5;
-const DEFAULT_FILL = "#FFFFFF";
+const DEFAULT_FILL = "rgb(147, 0, 0, 0.5)";
 const DENSITY_LEGEND_FONT_SIZE = "0.7rem";
 const DENSITY_LEGEND_TEXT_HEIGHT = 15;
 const DENSITY_LEGEND_TEXT_PADDING = 5;
@@ -763,10 +764,6 @@ export function drawScatter(
   // TODO: Handle log domain 0.
   const xMinMax = d3.extent(Object.values(points), (point) => point.xVal);
   const yMinMax = d3.extent(Object.values(points), (point) => point.yVal);
-  const populationMinMax = d3.extent(
-    Object.values(points),
-    (point) => point.population
-  );
 
   let height = properties.height - MARGINS.top - MARGINS.bottom;
   const minXAxisHeight = 30;
@@ -823,18 +820,27 @@ export function drawScatter(
     .data(Object.values(points))
     .enter()
     .append("circle")
-    .attr("r", (point) => {
-      if (!options.scalePoints) return MIN_DOT_SIZE;
-      const scale =
-        (point.population - populationMinMax[0]) /
-        (populationMinMax[1] - populationMinMax[0]);
-      return MIN_DOT_SIZE + (MAX_DOT_SIZE - MIN_DOT_SIZE) * scale;
-    })
+    .attr("r", MIN_DOT_SIZE)
     .attr("cx", (point) => xScale(point.xVal))
     .attr("cy", (point) => yScale(point.yVal))
     .attr("stroke", "rgb(147, 0, 0)")
     .style("opacity", "0.7")
     .on("click", (point: Point) => redirectAction(point.place.dcid));
+
+  if (options.scalePoints) {
+    const [popMin, popMax] = d3.extent(
+      Object.values(points),
+      (point) => point.population?.value
+    );
+    const scaleWrtPopulation = d3.scaleSqrt()
+      .domain([popMin, popMax])
+      .range([MIN_DOT_SIZE, MAX_DOT_SIZE]);
+    dots
+      .attr("r", (point) => {
+        const population = point.population?.value ?? popMin;
+        return scaleWrtPopulation(population);
+      })
+  }
 
   if (options.showDensity) {
     addDensity(

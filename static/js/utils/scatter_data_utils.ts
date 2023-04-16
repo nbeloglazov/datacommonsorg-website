@@ -20,10 +20,11 @@ import { Point } from "../chart/draw_scatter";
 import { DEFAULT_POPULATION_DCID } from "../shared/constants";
 import {
   EntityObservation,
+  Observation,
   SeriesApiResponse,
   StatMetadata,
 } from "../shared/stat_types";
-import { NamedPlace } from "../shared/types";
+import { NamedNode, NamedPlace } from "../shared/types";
 import { getMatchingObservation } from "../tools/shared_util";
 import { isBetween } from "./number_utils";
 import { getUnit } from "./stat_metadata_utils";
@@ -100,6 +101,15 @@ interface PlaceScatterData {
   yUnit?: string;
 }
 
+function getMostRecentPopulation(populationData: SeriesApiResponse, place: NamedNode): Observation|undefined {
+  const series = populationData.data[DEFAULT_POPULATION_DCID][place.dcid].series;
+  if (_.isEmpty(series)) {
+    return undefined;
+  }
+  return series[series.length - 1];
+}
+
+
 /**
  * Get the scatter chart data for a place
  * @param namedPlace place to get chart data for
@@ -149,13 +159,7 @@ export function getPlaceScatterData(
   if (_.isEmpty(yChartData)) {
     return null;
   }
-  const popSeries =
-    populationData.data[DEFAULT_POPULATION_DCID][namedPlace.dcid];
-  // Use xChart date for population as dates for xChart and yChart should be the same (?).
-  const population = getMatchingObservation(
-    popSeries?.series || [],
-    xChartData.statDate
-  );
+  const population = getMostRecentPopulation(populationData, namedPlace);
   const point: Point = {
     place: namedPlace,
     xVal: xChartData.value,
@@ -166,7 +170,7 @@ export function getPlaceScatterData(
     yPop: yChartData.denomValue,
     xPopDate: xChartData.denomDate,
     yPopDate: yChartData.denomDate,
-    population: population.value,
+    population,
   };
   const sources = xChartData.sources.concat(yChartData.sources);
   return { point, sources, xUnit: xChartData.unit, yUnit: yChartData.unit };
